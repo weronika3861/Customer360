@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="card">
+    <div class="card-header">
+        {% if withdraw %}
+          Transakcje obciążające konto klienta
+        {% else %}
+          Transakcje zasilające konto klienta
+        {% endif %}
+    </div>
+    <div class="card-body">
+        {% if transactions %}
+            {% for transaction in transactions %}
+                <span class="border rounded">{{ transaction.t.transaction_id }}</span>
+            {% endfor %}
+        {% else %}
+          <span class="border rounded">Brak transakcji</span>
+        {% endif %}
+    </div>
+</div>
+
+{% endblock content %}

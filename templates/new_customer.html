@@ -1,0 +1,134 @@
+{% extends "base.html" %}
+{% block style %}
+#form{
+    width: 50%;
+    margin:0 auto;
+}
+
+#options,
+#options-label,
+#add-trans-button,
+#add-deposit-trans-button,
+.withdraw-transaction-ids,
+.deposit-transaction-ids,
+.withdraw-transaction-label,
+.deposit-transaction-label{
+    display: none;
+}
+
+.btn{
+    margin-top:10px;
+}
+{% endblock %}
+
+{% block content %}
+<form id="form">
+  <div  class="form-group">
+    <label for="id">Id klienta*:</label>
+    <input class="form-control"  type="text" name="id" id="id" oninput="checkRequired()" required/>
+    <label for="name" >Imię klienta*:</label>
+    <input class="form-control"  type="text" name="name" id="name" oninput="checkRequired()"  required/>
+    <label for="acct_id">Id konta:</label>
+    <input class="form-control"  type="text"  name="acct_id" id="acct_id" oninput="accChange(this.value)"/>
+
+    <label for="options" id="options-label">Dostęp do konta:</label>
+    <select class="form-control"  id="options" name="acct_role">
+      <option value="primary">Podstowowy</option>
+      <option value="limited">Ograniczony</option>
+    </select>
+    <label for="first-withdraw-transaction-id" class="withdraw-transaction-label">Id transakcji obciążającej konto klienta:</label>
+    <input type="text" class="withdraw-transaction-ids form-control" id="first-withdraw-transaction-id"/>
+    <input type="button" class="btn btn-light" id="add-trans-button" onclick="addTransaction()" value="Dodaj transakcję"/>
+
+    <label for="first-deposit-transaction-id" class="deposit-transaction-label">Id transakcji zasilającej konto klienta:</label>
+    <input type="text" class="deposit-transaction-ids form-control" id="first-deposit-transaction-id"/>
+    <input type="button" class="btn btn-light" id="add-deposit-trans-button" onclick="addDepositTransaction()" value="Dodaj transakcję"/>
+  </div>
+  <div  class="form-group">
+    <label for="first-loan" class="loan-label">Id kredytu:</label>
+    <input type="text" id="first-loan" class="loan form-control"/>
+    <input type="button" class="btn btn-light"  id="add-credit-button" onclick="addCredit()" value="Dodaj kredyt"/>
+  <div  class="form-group">
+
+  </div>
+    <label for="cc-num" >Id Karty Kredytowej:</label>
+    <input type="text" id="cc-num" name="cc_num" class="form-control"/>
+
+    <input type="submit" class="btn btn-primary" id="submit" disabled value="Zatwierdź"/>
+  </div>
+</form>
+
+{% endblock %}
+
+{% block script %}
+  <script>
+    const form = document.querySelector('#form');
+
+    function addCredit(){
+      const prev = document.querySelector('#add-credit-button');
+      const span = document.querySelector('.loan-label').cloneNode(true);
+      const input = document.querySelector('.loan').cloneNode(true);
+      input.value = '';
+      prev.parentNode.insertBefore(span,prev);
+      prev.parentNode.insertBefore(input,prev);
+    }
+
+    function addTransaction(){
+      const prev = document.querySelector('#add-trans-button');
+      const span = document.querySelector('.withdraw-transaction-label').cloneNode(true);
+      const input = document.querySelector('.withdraw-transaction-ids').cloneNode(true);
+      input.value = '';
+      prev.parentNode.insertBefore(span,prev);
+      prev.parentNode.insertBefore(input,prev);
+    }
+
+    function addDepositTransaction(){
+      const prev = document.querySelector('#add-deposit-trans-button');
+      const span = document.querySelector('.deposit-transaction-label').cloneNode(true);
+      const input = document.querySelector('.deposit-transaction-ids').cloneNode(true);
+      input.value = '';
+      prev.parentNode.insertBefore(span,prev);
+      prev.parentNode.insertBefore(input,prev);
+    }
+
+    function accChange($event){
+      const display = $event == '' ? 'none' : 'block';
+      document.querySelector('#options').style.display = display
+      document.querySelector('#options-label').style.display = display;
+      document.querySelector('#add-trans-button').style.display = display;
+      document.querySelector('#add-deposit-trans-button').style.display = display;
+      document.querySelectorAll('.withdraw-transaction-label').forEach(elem=> elem.style.display = display);
+      document.querySelectorAll('.withdraw-transaction-ids').forEach(elem=> elem.style.display = display);
+      document.querySelectorAll('.deposit-transaction-label').forEach(elem=> elem.style.display = display);
+      document.querySelectorAll('.deposit-transaction-ids').forEach(elem=> elem.style.display = display);
+    }
+
+    async function submit($event) {
+        $event.preventDefault();
+        const data = new FormData($event.target);
+        const dataObject = {
+          ...Object.fromEntries(data.entries()),
+          withdraw_transaction_ids: [...document.querySelectorAll('.withdraw-transaction-ids')].map(input=>input.value),
+          deposit_transaction_ids: [...document.querySelectorAll('.deposit-transaction-ids')].map(input=>input.value),
+          loan_ids: [...document.querySelectorAll('.loan')].map(input=>input.value)
+        };
+        await fetch('{{ url_for("add_customer") }}', {
+            method: 'POST',
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(dataObject)
+        }).then(response => { if (response.redirected) { window.location.href = response.url; } });
+    }
+
+    function checkRequired(){
+      const name = document.querySelector('#name');
+      const id = document.querySelector('#id');
+        document.querySelector('#submit').disabled = name.value === '' || id.value === '';
+    }
+
+    form.addEventListener('submit', submit);
+
+  </script>
+{% endblock %}

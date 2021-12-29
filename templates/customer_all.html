@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% block style %}
+    .loan{
+        display: inline-block;
+    }
+{% endblock %}
+{% block content %}
+
+<div class="card">
+  <div class="card-header">
+    Dane klienta
+  </div>
+  <div class="card-body">
+    <h5>Imię klienta:</h5>
+    <p>{{data.name or 'Brak danych'}}</p>
+    <h5>Id klienta:</h5>
+    <p>{{data.customer_id  or 'Brak danych'}}</p>
+    <h5>Konto klienta:</h5>
+    <p>{{data.acct_id  or 'Brak danych'}}</p>
+    <p> Dostęp:
+      {% if data.role == 'primary' %}
+        Podstawowy
+      {% endif %}
+      {% if data.role == 'limited' %}
+        Ograniczony
+      {% endif %}
+      {% if data.role == undefined %}
+        Brak danych
+      {% endif %}
+    </p>
+    <h5>Karta kredytowa klienta:</h5>
+    <p>{{data.cc_num  or 'Brak danych'}}</p>
+    <h5>Kredyty klienta:</h5>
+    {% for loan in data.loans %}
+      <span class="border rounded loan">{{loan}}</span>
+    {% endfor %}
+    {% if data.loans == undefined or data.loans|length == 0 %}
+      Brak danych
+    {% endif %}
+  </div>
+</div>
+
+{% endblock content %}
