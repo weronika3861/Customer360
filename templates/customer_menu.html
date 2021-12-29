@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+{% block style %}
+    a{
+        text-align:center
+    }
+{% endblock %}
+{% block content %}
+
+{% if id %}
+<ul class="nav flex-column">
+    <li class="nav-item">
+        <a class="nav-link" href="{{ url_for('show_credit_card', id=id) }}">
+            <div class="card">
+              <div class="card-body">
+                Karta kredytowa klienta
+              </div>
+            </div>
+        </a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link" href="{{ url_for('show_loans', id=id) }}">
+             <div class="card">
+              <div class="card-body">
+                Kredyty klienta
+              </div>
+            </div>
+        </a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link" href="{{ url_for('show_account', id=id) }}">
+             <div class="card">
+              <div class="card-body">
+                Konto klienta
+              </div>
+            </div>
+        </a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link" href="{{ url_for('show_customer_all', id=id) }}">
+             <div class="card">
+              <div class="card-body">
+                Wszystkie informacje bezpośrednio związane z klientem
+              </div>
+            </div>
+        </a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link" href="{{ url_for('show_transactions_withdraw_from_account', id=id) }}">
+             <div class="card">
+              <div class="card-body">
+                Transakcje obciążające konto klienta
+              </div>
+            </div>
+        </a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link" href="{{ url_for('show_transactions_deposit_to_account', id=id) }}">
+             <div class="card">
+              <div class="card-body">
+                Transakcje zasilające konto klienta
+              </div>
+            </div>
+        </a>
+    </li>
+</ul>
+{% endif %}
+
+{% endblock content %}

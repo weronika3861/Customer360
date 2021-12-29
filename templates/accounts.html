@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="card">
+  <div class="card-header">
+    Konto klienta
+  </div>
+  <div class="card-body">
+    {% if account %}
+      <span class="border rounded">{{ account.a.acct_id }}</span>
+    {% else %}
+      <span class="border rounded">Brak konta</span>
+    {% endif %}
+  </div>
+</div>
+
+{% endblock content %}

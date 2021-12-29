@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+{% block style %}
+       tr{
+        cursor:pointer;
+       }
+       table{
+           border: 1px solid black;
+       }
+{% endblock %}
+{% block content %}
+
+<div class="card">
+  <div class="card-header">
+    Wybierz klienta aby wyświetlić o nim szczegółowe informacje.
+  </div>
+  <div class="card-body">
+      {% if customers %}
+        <table class="table table-hover">
+          <thead class="thead-dark">
+            <tr>
+              <th scope="col">ID</th>
+              <th scope="col">Name</th>
+              <th scope="col"></th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for customer in customers %}
+                <tr onclick="redirect('{{ url_for('show_customer_menu', id=customer.id) }}')">
+                  <th scope="row"> {{ customer.id }}</th>
+                  <td> {{ customer.c.name }}</td>
+                  <td><a href="{{ url_for('delete_customer', id=customer.id) }}"> USUŃ </a></td>
+                </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      {% endif %}
+
+  </div>
+    <div class="card-footer">
+         <a href="{{ url_for('new_customer') }}">
+            Dodaj klienta.
+         </a>
+    </div>
+  </div>
+{% endblock content %}
+
+{% block script %}
+  <script>
+   function redirect(url){
+        location.href = url;
+   }
+  </script>
+{% endblock %}
