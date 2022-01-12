@@ -44,6 +44,14 @@ def show_transactions_withdraw_from_account(id):
 def show_transactions_deposit_to_account(id):
     return render_template('transactions.html', transactions=get_transactions_deposit_to_account(id), withdraw=False)
 
+@app.route('/transactions/latest/<id>')
+def show_3_latest_transactions_on_account(id):
+    return render_template('latest_transactions.html', transactions=get_3_latest_transactions_on_account(id))
+
+@app.route('/shops/<id>')
+def show_shops_where_customer_bought_something(id):
+    return render_template('shops.html', shops=get_shops_where_customer_bought_something(id))
+
 @app.route('/new_customer')
 def new_customer():
     return render_template('new_customer.html')
@@ -63,8 +71,8 @@ def add_customer():
         acct_role = request.json['acct_role']
         cc_num = request.json['cc_num']
         loan_ids = request.json['loan_ids']
-        deposit_transaction_ids = request.json['deposit_transaction_ids']
-        withdraw_transaction_ids = request.json['withdraw_transaction_ids']
+        deposit_transactions = request.json['deposit_transactions']
+        withdraw_transactions = request.json['withdraw_transactions']
 
         query = "MATCH (c:Customer) WHERE c.customer_id = '" + id + "' RETURN c.customer_id"
         is_customer_exist = graph.run(query)
@@ -74,7 +82,7 @@ def add_customer():
             graph.run(query)
 
             if acct_id:
-                add_account(id, acct_id, acct_role, deposit_transaction_ids, withdraw_transaction_ids)
+                add_account(id, acct_id, acct_role, deposit_transactions, withdraw_transactions)
 
             if loan_ids[0]:
                 add_loans(id, loan_ids)
@@ -113,7 +121,7 @@ def add_loans(id, loan_ids):
                 "' CREATE (c)-[:OWES]->(l)"
         graph.run(query)
 
-def add_account(id, acct_id, acct_role, deposit_transaction_ids, withdraw_transaction_ids):
+def add_account(id, acct_id, acct_role, deposit_transactions, withdraw_transactions):
     query = "MATCH (a:Account) WHERE a.acct_id = '" + acct_id + "' RETURN a.acct_id"
     is_account_exist = graph.run(query)
 
@@ -126,37 +134,54 @@ def add_account(id, acct_id, acct_role, deposit_transaction_ids, withdraw_transa
             "' CREATE (c)-[:OWNS {role: '" + acct_role + "'}]->(a)"
     graph.run(query)
 
-    if deposit_transaction_ids:
-        add_transactions("DEPOSIT_TO", acct_id, deposit_transaction_ids)
+    if deposit_transactions[0]['transaction']:
+        add_transactions("DEPOSIT_TO", acct_id, deposit_transactions)
 
-    if withdraw_transaction_ids:
-        add_transactions("WITHDRAW_FROM", acct_id, withdraw_transaction_ids)
+    if withdraw_transactions[0]['transaction']:
+        add_transactions("WITHDRAW_FROM", acct_id, withdraw_transactions)
+        add_shops(withdraw_transactions)
 
-def add_transactions(type, acct_id, transaction_ids):
-    if transaction_ids[0]:
-        for transaction_id in transaction_ids:
-            query = "MATCH (t:Transaction) WHERE t.transaction_id = '" + transaction_id + "' RETURN t.transaction_id"
+def add_shops(withdraw_transactions):
+    for withdraw_transaction in withdraw_transactions:
+        transaction_id = withdraw_transaction['transaction']
+        shop_id = withdraw_transaction['shop']
+
+        query = "MATCH (s:Shop) WHERE s.shop_id = '" + shop_id + "' RETURN s.shop_id"
+        is_shop_exist = graph.run(query)
+
+        if not is_shop_exist.forward():
+            query = "CREATE (s:Shop {shop_id: '" + shop_id + "'})"
+            graph.run(query)
+
+        query = "MATCH (s:Shop),(t:Transaction) WHERE s.shop_id = '" + shop_id + "' AND t.transaction_id = '"  + transaction_id + \
+                "' CREATE (t)-[:PAY]->(s)"
+        graph.run(query)
+
+def add_transactions(type, acct_id, transactions):
+    if transactions[0]:
+        for transaction in transactions:
+            query = "MATCH (t:Transaction) WHERE t.transaction_id = '" + transaction['transaction'] + "' RETURN t.transaction_id"
             is_transaction_exist = graph.run(query)
 
             if not is_transaction_exist.forward():
-                query = "CREATE (t:Transaction {transaction_id: '" + transaction_id + "'})"
+                query = "CREATE (t:Transaction {transaction_id: '" + transaction['transaction'] + "', date: '" + transaction['date'] + "'})"
                 graph.run(query)
 
         query = "MATCH "
-        for transaction_id in transaction_ids:
-            query += "(t" + transaction_id + ":Transaction), "
+        for transaction in transactions:
+            query += "(t" + transaction['transaction'] + ":Transaction), "
 
         query += "(a:Account) WHERE "
         amount = 0
-        for transaction_id in transaction_ids:
-            query += "t" + transaction_id + ".transaction_id = '" + transaction_id + "' AND "
+        for transaction in transactions:
+            query += "t" + transaction['transaction'] + ".transaction_id = '" + transaction['transaction'] + "' AND "
             amount += 1
 
         query += " a.acct_id = '" + acct_id + "' CREATE "
         counter = 0
-        for transaction_id in transaction_ids:
+        for transaction in transactions:
             counter += 1
-            query += "(t" + transaction_id + ")-[:" + type + "]->(a)"
+            query += "(t" + transaction['transaction'] + ")-[:" + type + "]->(a)"
             if counter < amount:
                 query += ", "
 
@@ -230,3 +255,19 @@ def get_transactions_deposit_to_account(id):
     if data:
         return data
     return None
+
+def get_3_latest_transactions_on_account(id):
+    query = "MATCH (c:Customer {customer_id: '" + id + "'})-[:OWNS]-(account) MATCH (t:Transaction)-[r]-(account)" \
+            "RETURN t{.*}, type(r) AS r ORDER BY t.date DESC LIMIT 3"
+    data = graph.run(query).data()
+    if data:
+        return data
+    return None
+
+def get_shops_where_customer_bought_something(id):
+    query = "MATCH (t:Transaction)-[:PAY]->(s:Shop) MATCH (c:Customer {customer_id: '" + id + "'})-[:OWNS]-(a:Account)" \
+            "WHERE EXISTS ( (t)-[:WITHDRAW_FROM]-(a) ) RETURN s{.*}"
+    data = graph.run(query).data()
+    if data:
+        return data
+    return None 

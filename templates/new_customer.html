@@ -10,6 +10,9 @@
 #add-trans-button,
 #add-deposit-trans-button,
 .withdraw-transaction-ids,
+.shop-ids,
+.date,
+.date-deposit,
 .deposit-transaction-ids,
 .withdraw-transaction-label,
 .deposit-transaction-label{
@@ -19,6 +22,13 @@
 .btn{
     margin-top:10px;
 }
+
+.input-group, .input-group2{
+  display:flex;
+  gap: 10px;
+}
+
+
 {% endblock %}
 
 {% block content %}
@@ -37,11 +47,19 @@
       <option value="limited">Ograniczony</option>
     </select>
     <label for="first-withdraw-transaction-id" class="withdraw-transaction-label">Id transakcji obciążającej konto klienta:</label>
-    <input type="text" class="withdraw-transaction-ids form-control" id="first-withdraw-transaction-id"/>
+    <div class="input-group" id="input-group">
+      <input type="text" class="withdraw-transaction-ids form-control" id="first-withdraw-transaction-id" placeholder="Id transakcji"/>
+      <input type="text" class="shop-ids form-control" id="shop-id" placeholder="Id sklepu"/>
+      <input type="date" class="date form-control" id="date" placeholder="Data"/>
+    </div>
     <input type="button" class="btn btn-light" id="add-trans-button" onclick="addTransaction()" value="Dodaj transakcję"/>
 
     <label for="first-deposit-transaction-id" class="deposit-transaction-label">Id transakcji zasilającej konto klienta:</label>
-    <input type="text" class="deposit-transaction-ids form-control" id="first-deposit-transaction-id"/>
+    <div class="input-group2" id="input-group2">
+      <input type="text" class="deposit-transaction-ids form-control" id="first-deposit-transaction-id"/>
+      <input type="date" class="date-deposit form-control" id="date-deposit" placeholder="Data"/>
+    </div>
+
     <input type="button" class="btn btn-light" id="add-deposit-trans-button" onclick="addDepositTransaction()" value="Dodaj transakcję"/>
   </div>
   <div  class="form-group">
@@ -76,19 +94,19 @@
     function addTransaction(){
       const prev = document.querySelector('#add-trans-button');
       const span = document.querySelector('.withdraw-transaction-label').cloneNode(true);
-      const input = document.querySelector('.withdraw-transaction-ids').cloneNode(true);
-      input.value = '';
+      const inputs = document.querySelector('#input-group').cloneNode(true);
+      inputs.querySelectorAll('input').forEach(elem=>elem.value = '');
       prev.parentNode.insertBefore(span,prev);
-      prev.parentNode.insertBefore(input,prev);
+      prev.parentNode.insertBefore(inputs,prev);
     }
 
     function addDepositTransaction(){
       const prev = document.querySelector('#add-deposit-trans-button');
       const span = document.querySelector('.deposit-transaction-label').cloneNode(true);
-      const input = document.querySelector('.deposit-transaction-ids').cloneNode(true);
-      input.value = '';
+      const inputs = document.querySelector('#input-group2').cloneNode(true);
+      inputs.querySelectorAll('input').forEach(elem=>elem.value = '');
       prev.parentNode.insertBefore(span,prev);
-      prev.parentNode.insertBefore(input,prev);
+      prev.parentNode.insertBefore(inputs,prev);
     }
 
     function accChange($event){
@@ -99,6 +117,9 @@
       document.querySelector('#add-deposit-trans-button').style.display = display;
       document.querySelectorAll('.withdraw-transaction-label').forEach(elem=> elem.style.display = display);
       document.querySelectorAll('.withdraw-transaction-ids').forEach(elem=> elem.style.display = display);
+      document.querySelectorAll('.shop-ids').forEach(elem=> elem.style.display = display);
+      document.querySelectorAll('.date').forEach(elem=> elem.style.display = display);
+      document.querySelectorAll('.date-deposit').forEach(elem=> elem.style.display = display);
       document.querySelectorAll('.deposit-transaction-label').forEach(elem=> elem.style.display = display);
       document.querySelectorAll('.deposit-transaction-ids').forEach(elem=> elem.style.display = display);
     }
@@ -106,10 +127,15 @@
     async function submit($event) {
         $event.preventDefault();
         const data = new FormData($event.target);
+        const withdraw = [...document.querySelectorAll('.withdraw-transaction-ids')].map(input=>input.value);
+        const shop =  [...document.querySelectorAll('.shop-ids')].map(input=>input.value);
+        const date =  [...document.querySelectorAll('.date')].map(input=>input.value);
+        const date2 =  [...document.querySelectorAll('.date-deposit')].map(input=>input.value);
+        const deposit = [...document.querySelectorAll('.deposit-transaction-ids')].map(input=>input.value);
         const dataObject = {
           ...Object.fromEntries(data.entries()),
-          withdraw_transaction_ids: [...document.querySelectorAll('.withdraw-transaction-ids')].map(input=>input.value),
-          deposit_transaction_ids: [...document.querySelectorAll('.deposit-transaction-ids')].map(input=>input.value),
+          withdraw_transactions: withdraw.map((trans,i)=>({transaction:trans, shop:shop[i],date:date[i]})),
+          deposit_transactions: deposit.map((trans,i)=>({transaction:trans,date:date2[i]})),
           loan_ids: [...document.querySelectorAll('.loan')].map(input=>input.value)
         };
         await fetch('{{ url_for("add_customer") }}', {

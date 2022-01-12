@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="card">
+    <div class="card-header">
+        Trzy ostatnie transakcje na koncie klienta
+    </div>
+    <div class="card-body transactions-data">
+        {% if transactions %}
+        {% for transaction in transactions %}
+        <div class="border rounded card-data">
+          <span class="data"><span class="bolded">ID:</span>{{ transaction.t.transaction_id }}</span>
+          <span class="data"><span class="bolded">Typ transakcji:</span>{% if transaction.r == 'WITHDRAW_FROM' %}obciążający konto{% else %}zasilający konto {% endif %}</span>
+          <span class="data"><span class="bolded">Data:</span>{{ transaction.t.date }}</span>
+        </div>
+        {% endfor %}
+        {% else %}
+          <span class="border rounded">Brak transakcji</span>
+        {% endif %}
+    </div>
+</div>
+
+{% endblock content %}
+

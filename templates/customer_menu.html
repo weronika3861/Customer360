@@ -62,6 +62,24 @@
             </div>
         </a>
     </li>
+    <li class="nav-item">
+      <a class="nav-link" href="{{ url_for('show_3_latest_transactions_on_account', id=id) }}">
+           <div class="card">
+            <div class="card-body">
+              Trzy ostatnie transakcje na koncie klienta
+            </div>
+          </div>
+      </a>
+  </li>
+  <li class="nav-item">
+    <a class="nav-link" href="{{ url_for('show_shops_where_customer_bought_something', id=id) }}">
+         <div class="card">
+          <div class="card-body">
+            Sklepy w których klient robił zakupy
+          </div>
+        </div>
+    </a>
+</li>
 </ul>
 {% endif %}
 

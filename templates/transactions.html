@@ -9,10 +9,13 @@
           Transakcje zasilające konto klienta
         {% endif %}
     </div>
-    <div class="card-body">
+    <div class="card-body transactions-data">
         {% if transactions %}
             {% for transaction in transactions %}
-                <span class="border rounded">{{ transaction.t.transaction_id }}</span>
+                <div class="border rounded card-data">
+                  <span class="data"><span class="bolded">ID:</span>{{ transaction.t.transaction_id }}</span>
+                  <span class="data"><span class="bolded">Data:</span>{{ transaction.t.date }}</span>
+                </div>
             {% endfor %}
         {% else %}
           <span class="border rounded">Brak transakcji</span>

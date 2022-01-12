@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="card">
+    <div class="card-header">
+        Sklepy w których klient robił zakupy
+    </div>
+    <div class="card-body">
+        {% if shops %}
+            {% for shop in shops %}
+                <span class="border rounded">{{ shop.s.shop_id }}</span>
+            {% endfor %}
+        {% else %}
+          <span class="border rounded">Brak sklepów</span>
+        {% endif %}
+    </div>
+</div>
+
+{% endblock content %}
